@@ -1,3 +1,7 @@
+using Infrastructure.Context;
+using Infrastructure.Settings;
+using System.Reflection;
+using ZeStudio;
 
 namespace API
 {
@@ -11,16 +15,41 @@ namespace API
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+            builder.Services.AddDbContext<AppDbContext>();
+            builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            //builder.Services.AddSwaggerGen();
+
+            Assembly.Load("IdentityDetails"); //Temporary fix
+            Assembly.Load("BlogDetails");
+
+            ConfigurationManager Configuration = builder.Configuration;
+
+            #region Register Services
+            DependencyInjectionConfigurator.Configure(builder.Services);
+            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+
+            //Paket yuklenmesinde xeta yarandigina gore commente aldim. Yuxarida muveqqeti hell yazdim
+
+            //foreach (var assembly in assemblies)
+            //{
+            //    builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(assembly));
+            //    builder.Services.AddAutoMapper(assembly);
+            //}
+            DependencyInjectionConfigurator.Configure(builder.Services);
+            #endregion
+
+            #region Settings
+            builder.Services.Configure<JWTSettings>(Configuration.GetSection("JWT"));
+            #endregion
 
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
-                app.UseSwagger();
-                app.UseSwaggerUI();
+                //app.UseSwagger();
+                //app.UseSwaggerUI();
             }
 
             app.UseHttpsRedirection();
