@@ -9,7 +9,7 @@ namespace Domain.Entities
         public string LastName { get; private set; }
         public string Email { get; private set; }
         public string PasswordHash { get; private set; }
-        public string RefreshToken {  get; private set; }
+        public string? RefreshToken {  get; private set; }
         public bool IsDeleted {  get; private set; }
         public Role Role { get; private set; }
         public Guid RoleId { get; private set; }
@@ -21,7 +21,11 @@ namespace Domain.Entities
             Email = email;
         }
 
-        public void SetPasswordHash(string passwordHash)
+        public void SetRole(Guid id)
+        {
+            RoleId = id;
+        }
+        public void ChangePassword(string passwordHash)
         {
             PasswordHash = passwordHash;
         }

@@ -1,5 +1,7 @@
 using Infrastructure.Context;
 using Infrastructure.Settings;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using System.Reflection;
 using ZeStudio;
 
@@ -18,7 +20,7 @@ namespace API
             builder.Services.AddDbContext<AppDbContext>();
             builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             builder.Services.AddEndpointsApiExplorer();
-            //builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen();
 
             Assembly.Load("IdentityDetails"); //Temporary fix
             Assembly.Load("BlogDetails");
@@ -29,14 +31,34 @@ namespace API
             DependencyInjectionConfigurator.Configure(builder.Services);
             var assemblies = AppDomain.CurrentDomain.GetAssemblies();
 
-            //Paket yuklenmesinde xeta yarandigina gore commente aldim. Yuxarida muveqqeti hell yazdim
-
-            //foreach (var assembly in assemblies)
-            //{
-            //    builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(assembly));
-            //    builder.Services.AddAutoMapper(assembly);
-            //}
+            foreach (var assembly in assemblies)
+            {
+                builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(assembly));
+                builder.Services.AddAutoMapper(assembly);
+            }
             DependencyInjectionConfigurator.Configure(builder.Services);
+            #endregion
+
+            #region JWT
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+
+                    ValidIssuer = builder.Configuration["JWT:Issuer"],
+                    ValidAudience = builder.Configuration["JWT:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8
+                            .GetBytes(builder.Configuration.GetSection("JWT:Key").Value)),
+                };
+            });
             #endregion
 
             #region Settings
@@ -48,8 +70,8 @@ namespace API
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
-                //app.UseSwagger();
-                //app.UseSwaggerUI();
+                app.UseSwagger();
+                app.UseSwaggerUI();
             }
 
             app.UseHttpsRedirection();

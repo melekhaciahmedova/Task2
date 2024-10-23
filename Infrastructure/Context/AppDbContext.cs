@@ -1,6 +1,8 @@
 ﻿using Domain.Entities;
 using Domain.Entities.RoleAggregate;
+using Infrastructure.Seed;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 
 namespace Infrastructure.Context
 {
@@ -9,6 +11,15 @@ namespace Infrastructure.Context
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<Blog> Blogs { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            #region Seed
+            AdminSeed.SeedData(modelBuilder);
+            RoleSeed.SeedData(modelBuilder);
+            #endregion
+        }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
